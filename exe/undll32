@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+require 'undll32'
+p Undll32.exe(ARGV)

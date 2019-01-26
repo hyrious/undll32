@@ -1,13 +1,58 @@
 require "undll32/version"
-require 'win32api'
+require 'fiddle/import'
 
 ##
 # Undll32
 # replacement of Windows' rundll32.exe
 module Undll32
 
+  class Win32API
+    DLL = {}
+    TYPEMAP = {
+      '0' => Fiddle::TYPE_VOID,
+      'S' => Fiddle::TYPE_VOIDP,
+      'I' => Fiddle::TYPE_LONG,
+    }
+    POINTER_TYPE =
+      Fiddle::SIZEOF_VOIDP == Fiddle::SIZEOF_LONG_LONG ? 'q*' : 'l!*'
+    WIN32_TYPES = 'VPpNnLlIi'
+    DL_TYPES = '0SSI'
+
+    def initialize(dllname, func, import, export = '0', calltype = :stdcall)
+      @proto = [import].join.tr(WIN32_TYPES, DL_TYPES).sub(/^(.)0*$/, '\1')
+      import = @proto.chars.map { |e| TYPEMAP[e.tr(WIN32_TYPES, DL_TYPES)] }
+      export = TYPEMAP[export.tr(WIN32_TYPES, DL_TYPES)]
+      calltype = Fiddle::Importer.const_get(:CALL_TYPE_TO_ABI)[calltype]
+      handle = DLL[dllname] ||=
+        begin
+          Fiddle.dlopen(dllname)
+        rescue Fiddle::DLError
+          raise unless File.extname(dllname).empty?
+          Fiddle.dlopen("#{dllname}.dll")
+        end
+      @func = Fiddle::Function.new(handle[func], import, export, calltype)
+    rescue Fiddle::DLError => e
+      raise LoadError, e.message, e.backtrace
+    end
+
+    def call(*args)
+      import = @proto.split('')
+      args.each_with_index do |x, i|
+        if import[i] == 'S'
+          args[i] = [x == 0 ? nil : x].pack('p').unpack(POINTER_TYPE)
+        end
+        args[i], = [x].pack('I').unpack('i') if import[i] == 'I'
+      end
+      ret, = @func.call(*args)
+      ret || 0
+    end
+
+    alias Call call
+  end
+
   ##
-  # represents a string/struct
+  # represents a string/struct.
+  # a thinner version can be found at hyrious/rgstl/blob/master/scripts/api.rb
   # Buffer.new({ :x => :L, :y => 4 })
   # Buffer.new([ :L, 4 ])
   # Buffer.new(:L)

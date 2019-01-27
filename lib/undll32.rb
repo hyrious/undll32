@@ -39,7 +39,7 @@ module Undll32
       import = @proto.split('')
       args.each_with_index do |x, i|
         if import[i] == 'S'
-          args[i] = [x == 0 ? nil : x].pack('p').unpack(POINTER_TYPE)
+          args[i], = [x == 0 ? nil : x].pack('p').unpack(POINTER_TYPE)
         end
         args[i], = [x].pack('I').unpack('i') if import[i] == 'I'
       end

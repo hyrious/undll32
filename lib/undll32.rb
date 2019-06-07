@@ -52,7 +52,6 @@ module Undll32
 
   ##
   # represents a string/struct.
-  # a thinner version can be found at hyrious/rgstl/blob/master/scripts/api.rb
   # Buffer.new({ :x => :L, :y => 4 })
   # Buffer.new([ :L, 4 ])
   # Buffer.new(:L)
@@ -271,6 +270,9 @@ module Undll32
     return help if dllfunc.nil?
     dll, func = dllfunc.split(',')
     return help if func.nil?
+    dll += '.dll' unless dll.end_with? '.dll'
+    realpath = File.expand_path dll
+    dll = realpath if File.exist? realpath
     args.map! do |e|
       e = e.dup
       if e.start_with?('+')

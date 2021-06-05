@@ -1,21 +1,21 @@
 PATH
   remote: .
   specs:
-    undll32 (0.1.0)
+    undll32 (0.3.4)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    rake (13.0.1)
+    rake (13.0.3)
 
 PLATFORMS
   ruby
   x64-mingw32
 
 DEPENDENCIES
-  bundler (~> 1.16)
+  bundler (~> 2.2.9)
   rake (~> 13.0)
   undll32!
 
 BUNDLED WITH
-   1.16.2
+   2.2.9
